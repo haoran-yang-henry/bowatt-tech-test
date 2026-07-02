@@ -28,3 +28,9 @@ func (m *Memory) All() []documents.Document {
 	copy(out, m.docs)
 	return out
 }
+
+func (m *Memory) Clear() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.docs = nil
+}

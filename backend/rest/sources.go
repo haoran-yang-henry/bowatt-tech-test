@@ -30,6 +30,9 @@ func (s *Server) handleSources(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := r.MultipartForm.File["files"]
+
+	s.Store.Clear()
+
 	uploaded := make([]uploadedFile, 0, len(files))
 	for _, fh := range files {
 		f, err := fh.Open()
