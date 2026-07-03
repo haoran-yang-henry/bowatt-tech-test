@@ -50,21 +50,23 @@ func (a *Agent) deriveFocus(ctx context.Context, req Request) (string, error) {
 	return a.complete(ctx, messages, false)
 }
 
-// main orchestration: step 1 focus → step 2 retrieve from docs → step 3 web search loop → step 4 synthesize
+// main orchestration: step 1 setting research focus → step 2 retrieve from docs → step 3 web search loop → step 4 synthesize
 func (a *Agent) Answer(ctx context.Context, req Request, emit func(string) error) error {
+
+	// step 1, set up the research focus to avoid draft during multistep resoning and searching
 	focus, err := a.deriveFocus(ctx, req)
 	if err != nil {
 		return err
 	}
 	emit("🎯 research focus: " + focus + "\n\n")
 
-	// Retrieve the passages most relevant to the focus from the uploaded
-	// sources (embedded at upload time and cached in the store).
+	// step 2, retrieve the passages most relevant to the focus from the uploaded sources (embedded at upload time and cached in the store).
 	docs, err := a.retrieve(ctx, focus, req.Chunks, 8)
 	if err != nil {
 		return err
 	}
 
+	// step 3, multistep web search loop: searching-> key points summarizing
 	var notes []string
 	for round := 1; round <= a.maxRounds; round++ {
 		queries, enough, err := a.decideSearch(ctx, focus, notes)
@@ -101,12 +103,12 @@ func (a *Agent) Answer(ctx context.Context, req Request, emit func(string) error
 		}
 		notes = append(notes, summary)
 	}
-
+	// step 4, summarizing all key points and streaming the answers
 	emit("\n📝 summarizing research result...\n\n")
 	return a.synthesize(ctx, req, docs, focus, notes, emit)
 }
 
-// planing and reflecting functions
+// planing and reflecting functions for search focus
 func (a *Agent) decideSearch(ctx context.Context, focus string, notes []string) ([]string, bool, error) {
 	var b strings.Builder
 	b.WriteString("Research focus (do NOT deviate from this): " + focus + "\n\n")
