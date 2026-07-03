@@ -43,16 +43,6 @@ Expected endpoints:
 - `POST /api/research` — accepts JSON `{ "request": "..." }` and returns a streamed markdown response.
 - `POST /api/sources` — accepts multipart form uploads under the repeated field name `files`.
 
-## LLM API Setup
-
-For LLM functions, please set up your API keys, base URL and Model:
-
-```sh
-export LLM_API_KEY="your api key"
-export LLM_BASE_URL="https://api.openai.com/v1"   
-export LLM_MODEL="model name" 
-export SEARCH_API_KEY="your search api key, tavily recommended" 
-```
 
 ## Backend Setup
 
