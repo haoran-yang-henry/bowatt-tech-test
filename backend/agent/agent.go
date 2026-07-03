@@ -46,7 +46,11 @@ func (a *Agent) deriveFocus(ctx context.Context, req Request) (string, error) {
 	b.WriteString("Documents (preview):\n")
 	b.WriteString(preview(chunkTexts(req.Chunks), 2000))
 	b.WriteString("\nUser question: " + req.Query + "\n\n")
-	b.WriteString("In ONE sentence, state precisely what this research is about, grounded strictly in the documents and the question. Do not introduce any topic not present in the documents.")
+	if len(req.Chunks) > 0 {
+		b.WriteString("In ONE sentence, state precisely what this research is about, grounded in both the documents and the question. Do not introduce a topic present in neither the documents nor the question.")
+	} else {
+		b.WriteString("No documents were provided. In ONE sentence, state precisely what this research is about, derived from the user question only.")
+	}
 	messages := []map[string]string{{"role": "user", "content": b.String()}}
 	return a.complete(ctx, messages, false)
 }
