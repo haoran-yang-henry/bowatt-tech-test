@@ -82,7 +82,7 @@ func (a *Agent) embed(ctx context.Context, inputs []string) ([][]float32, error)
 // text+vector pairs are cached in the store at upload time (short-term memory),
 // so a document is embedded once regardless of how many questions follow.
 func (a *Agent) IndexDocument(ctx context.Context, text string) ([]documents.Chunk, error) {
-	pieces := chunk(text, 800, 100)
+	pieces := chunk(text, 1600, 200)
 	if len(pieces) == 0 {
 		return nil, nil
 	}
