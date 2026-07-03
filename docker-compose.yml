@@ -8,7 +8,7 @@ services:
       - "8787"          # internal only; reached via the frontend's nginx proxy
 
   frontend:
-    build: .
+    build: ./frontend
     ports:
       - "8080:80"       # open http://localhost:8080 in the browser
     depends_on:

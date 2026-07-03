@@ -31,9 +31,10 @@ Frontend -> Go backend
 
 ## Setup
 
-Install dependencies:
+The frontend lives in the `frontend/` folder. Install dependencies:
 
 ```sh
+cd frontend
 npm install
 ```
 
