@@ -31,7 +31,7 @@ func New(apiKey, baseURL, model, searchKey string) *Agent {
 		baseURL:   baseURL,
 		model:     model,
 		searchKey: searchKey,
-		maxRounds: 3, // 最多 3 轮
+		maxRounds: 3,
 		http:      &http.Client{},
 	}
 }
