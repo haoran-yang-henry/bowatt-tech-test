@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 
 	"bowatt-backend/documents"
 )
@@ -50,7 +51,7 @@ func (a *Agent) deriveFocus(ctx context.Context, req Request) (string, error) {
 	return a.complete(ctx, messages, false)
 }
 
-// main orchestration: step 1 setting research focus → step 2 retrieve from docs → step 3 web search loop → step 4 synthesize
+// main orchestration: step 1, setting research focus → step 2 retrieve from docs → step 3 web search loop → step 4 synthesize
 func (a *Agent) Answer(ctx context.Context, req Request, emit func(string) error) error {
 
 	// step 1, set up the research focus to avoid draft during multistep resoning and searching
@@ -77,20 +78,28 @@ func (a *Agent) Answer(ctx context.Context, req Request, emit func(string) error
 			break
 		}
 
+		// add goroutine for web research
 		emit(fmt.Sprintf("🔎 Research round %d  \n", round))
 		var results []Source
+		var mu sync.Mutex
+		var wg sync.WaitGroup
 		for _, q := range queries {
 			emit("  · Search: " + q + "\n")
-			found, err := webSearch(ctx, a.searchKey, q)
-			if err != nil {
-				emit("    (Search failed: " + err.Error() + ")\n")
-				continue
-			}
-			results = append(results, found...)
-			if len(results) >= 20 {
-				results = results[:20]
-				break
-			}
+			wg.Add(1)
+			go func(q string) {
+				defer wg.Done()
+				found, err := webSearch(ctx, a.searchKey, q)
+				if err != nil {
+					return
+				}
+				mu.Lock()
+				results = append(results, found...)
+				mu.Unlock()
+			}(q)
+		}
+		wg.Wait()
+		if len(results) > 20 {
+			results = results[:20]
 		}
 		if len(results) == 0 {
 			continue
