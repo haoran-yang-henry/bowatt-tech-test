@@ -22,8 +22,7 @@ func (s *Server) handleSources(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
-	}
-
+	} // checking method, only receive POST API
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		http.Error(w, "could not parse upload", http.StatusBadRequest)
 		return
@@ -31,9 +30,11 @@ func (s *Server) handleSources(w http.ResponseWriter, r *http.Request) {
 
 	files := r.MultipartForm.File["files"]
 
-	s.Store.Clear()
+	s.Store.Clear() // replace-on-upload, avoid multiple document being researched at the same time, follwed the frontend logic, further step can be upgraded for multiple document research
 
 	uploaded := make([]uploadedFile, 0, len(files))
+
+	// document processing, including content extraction, indexing and vectorization and save
 	for _, fh := range files {
 		f, err := fh.Open()
 		if err != nil {
