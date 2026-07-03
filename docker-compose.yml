@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./backend
+    # Inject the project's .env directly into the container at runtime.
+    env_file:
+      - ./.env
+    expose:
+      - "8787"          # internal only; reached via the frontend's nginx proxy
+
+  frontend:
+    build: .
+    ports:
+      - "8080:80"       # open http://localhost:8080 in the browser
+    depends_on:
+      - backend

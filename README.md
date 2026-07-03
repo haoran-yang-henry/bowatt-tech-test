@@ -71,19 +71,12 @@ The backend is a Go service that reads all LLM config from environment
 variables (`LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `SEARCH_API_KEY`, `EMBED_MODEL` ).
 Open a **second terminal** for it, separate from the frontend.
 
-```sh
-cd backend
-
-```
-
 ### Option A — use a `.env` file (recommended)
 
-Copy the example file and fill in your real keys:
+From the project root, copy the example file and fill in your real keys:
 
 ```sh
-cd backend
 cp .env.example .env
-
 ```
 edit .env and set your keys
 
@@ -91,7 +84,7 @@ Then load it into the environment and start the server:
 
 ```sh
 set -a; source .env; set +a
-go run .
+cd backend && go run .
 ```
 ### Option B — export variables manually
 
@@ -109,6 +102,34 @@ go run .
 
 ```
 Either way, the backend listens on http://localhost:8787.
+
+## Run with Docker
+
+The whole app (frontend + backend) is containerized and orchestrated with
+Docker Compose. This is the simplest way to run everything with one command.
+
+1. From the project root, create your `.env` and fill in your keys:
+
+   ```sh
+   cp .env.example .env
+   # edit .env and set LLM_API_KEY, SEARCH_API_KEY, etc.
+   ```
+
+2. Build and start both services:
+
+   ```sh
+   docker compose up --build
+   ```
+
+3. Open **http://localhost:8080** in the browser.
+
+How it works:
+
+- **backend** — multi-stage Go build; reads config from `./.env` at runtime;
+  not exposed to the host, only reachable inside the Compose network.
+- **frontend** — built with Vite and served by nginx, which also reverse-proxies
+  `/api/*` to the backend. The browser talks to a single origin, so no CORS is
+  needed and streaming responses are forwarded unbuffered.
 
 
 # System Design Rationale
