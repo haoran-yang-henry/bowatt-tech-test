@@ -4,15 +4,15 @@ A research-agent that answers the user's question by combining their uploaded so
 
 ## Architecture
 
-
-Frontend-> GO backend 
-                |- upload -> extract -> chunk -> embedding -> store (short term memo)
-                |- query -> agent orchestration:
-                                  |1. derive Focus <- anchor, threads through 2-4                      
-                                  |2. retrieve from stored document embeds (short term memo)
-                                  |3. search loop (LLM determined, max 3 rounds)
-                                  |4. synthesize and stream answers
-
+```
+Frontend -> Go backend
+             |- upload -> extract -> chunk -> embedding -> store (short-term memory)
+             |- query  -> agent orchestration:
+                          |1. derive focus  <- anchor, threads through 2-4
+                          |2. retrieve from stored document embeddings (short-term memory)
+                          |3. search loop (LLM-determined, max 3 rounds)
+                          |4. synthesize and stream answers
+```
 
 
 ## Features
