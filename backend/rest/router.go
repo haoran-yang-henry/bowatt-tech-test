@@ -12,6 +12,7 @@ type Server struct {
 	Agent *agent.Agent
 }
 
+// Register API routes and apply CORS middleware.
 func (s *Server) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/sources", s.handleSources)
