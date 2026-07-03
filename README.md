@@ -69,7 +69,7 @@ cd backend
 cp .env.example .env
 
 ```
-# edit .env and set your keys
+edit .env and set your keys
 
 Then load it into the environment and start the server:
 
@@ -88,6 +88,7 @@ export LLM_API_KEY="your api key"
 export LLM_BASE_URL="https://api.openai.com/v1"
 export LLM_MODEL="model name"
 export SEARCH_API_KEY="your search api key, tavily recommended"
+export EMBED_MODEL="model name"
 go run .
 
 ```

@@ -15,6 +15,7 @@ func main() {
 		os.Getenv("LLM_API_KEY"),
 		getenv("LLM_BASE_URL", "https://api.openai.com/v1"),
 		getenv("LLM_MODEL", "gpt-4o-mini"),
+		getenv("EMBED_MODEL", "text-embedding-3-small"),
 		os.Getenv("SEARCH_API_KEY"),
 	)
 

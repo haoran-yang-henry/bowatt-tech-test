@@ -9,51 +9,61 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"bowatt-backend/documents"
 )
 
 type Request struct {
-	Query     string
-	Documents []string
+	Query  string
+	Chunks []documents.Chunk
 }
 
 type Agent struct {
-	apiKey    string
-	baseURL   string
-	model     string
-	searchKey string
-	maxRounds int
-	http      *http.Client
+	apiKey     string
+	baseURL    string
+	model      string
+	embedModel string
+	searchKey  string
+	maxRounds  int
+	http       *http.Client
 }
 
-func New(apiKey, baseURL, model, searchKey string) *Agent {
+func New(apiKey, baseURL, model, embedModel, searchKey string) *Agent {
 	return &Agent{
-		apiKey:    apiKey,
-		baseURL:   baseURL,
-		model:     model,
-		searchKey: searchKey,
-		maxRounds: 3,
-		http:      &http.Client{},
+		apiKey:     apiKey,
+		baseURL:    baseURL,
+		model:      model,
+		embedModel: embedModel,
+		searchKey:  searchKey,
+		maxRounds:  3,
+		http:       &http.Client{},
 	}
 }
 
 func (a *Agent) deriveFocus(ctx context.Context, req Request) (string, error) {
 	var b strings.Builder
-	b.WriteString("Documents:\n")
-	b.WriteString(joinDocs(req.Documents))
+	b.WriteString("Documents (preview):\n")
+	b.WriteString(preview(chunkTexts(req.Chunks), 2000))
 	b.WriteString("\nUser question: " + req.Query + "\n\n")
 	b.WriteString("In ONE sentence, state precisely what this research is about, grounded strictly in the documents and the question. Do not introduce any topic not present in the documents.")
 	messages := []map[string]string{{"role": "user", "content": b.String()}}
 	return a.complete(ctx, messages, false)
 }
 
-// main orchastration: step 1 plan, step 2 search loop, step 3 summarize result from search result
-
+// main orchestration: step 1 focus → step 2 retrieve from docs → step 3 web search loop → step 4 synthesize
 func (a *Agent) Answer(ctx context.Context, req Request, emit func(string) error) error {
 	focus, err := a.deriveFocus(ctx, req)
 	if err != nil {
 		return err
 	}
 	emit("🎯 research focus: " + focus + "\n\n")
+
+	// Retrieve the passages most relevant to the focus from the uploaded
+	// sources (embedded at upload time and cached in the store).
+	docs, err := a.retrieve(ctx, focus, req.Chunks, 8)
+	if err != nil {
+		return err
+	}
 
 	var notes []string
 	for round := 1; round <= a.maxRounds; round++ {
@@ -93,7 +103,7 @@ func (a *Agent) Answer(ctx context.Context, req Request, emit func(string) error
 	}
 
 	emit("\n📝 summarizing research result...\n\n")
-	return a.synthesize(ctx, req, focus, notes, emit)
+	return a.synthesize(ctx, req, docs, focus, notes, emit)
 }
 
 // planing and reflecting functions
@@ -140,12 +150,21 @@ func (a *Agent) summarizeRound(ctx context.Context, focus string, results []Sour
 	return a.complete(ctx, messages, false)
 }
 
+func preview(docs []string, max int) string {
+	full := joinDocs(docs)
+	r := []rune(full)
+	if len(r) > max {
+		return string(r[:max]) + "\n...(truncated)"
+	}
+	return full
+}
+
 // stream output of the final investigation result
 
-func (a *Agent) synthesize(ctx context.Context, req Request, focus string, notes []string, emit func(string) error) error {
+func (a *Agent) synthesize(ctx context.Context, req Request, docs []string, focus string, notes []string, emit func(string) error) error {
 	var b strings.Builder
 	b.WriteString("Research focus: " + focus + "\n\n")
-	b.WriteString("Internal knowledge (documents):\n" + joinDocs(req.Documents))
+	b.WriteString("Internal knowledge (documents):\n" + joinDocs(docs))
 	if len(notes) > 0 {
 		b.WriteString("\nWeb findings:\n" + strings.Join(notes, "\n") + "\n")
 	}
@@ -162,6 +181,14 @@ func (a *Agent) synthesize(ctx context.Context, req Request, focus string, notes
 }
 
 // assemble the document
+
+func chunkTexts(chunks []documents.Chunk) []string {
+	out := make([]string, len(chunks))
+	for i, c := range chunks {
+		out[i] = c.Text
+	}
+	return out
+}
 
 func joinDocs(docs []string) string {
 	if len(docs) == 0 {

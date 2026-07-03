@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"bowatt-backend/agent"
+	"bowatt-backend/documents"
 )
 
 func (s *Server) handleResearch(w http.ResponseWriter, r *http.Request) {
@@ -31,15 +32,15 @@ func (s *Server) handleResearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// retake the documents that has been save into "store"
-	var docs []string
+	// gather the pre-embedded chunks cached in the store at upload time
+	var chunks []documents.Chunk
 	for _, d := range s.Store.All() {
-		docs = append(docs, d.Content)
+		chunks = append(chunks, d.Chunks...)
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	req := agent.Request{Query: body.Request, Documents: docs}
+	req := agent.Request{Query: body.Request, Chunks: chunks}
 	err := s.Agent.Answer(r.Context(), req, func(chunk string) error {
 		if _, err := w.Write([]byte(chunk)); err != nil {
 			return err

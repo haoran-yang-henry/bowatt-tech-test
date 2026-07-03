@@ -47,7 +47,14 @@ func (s *Server) handleSources(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		s.Store.Save(documents.Extract(fh.Filename, data))
+		doc := documents.Extract(fh.Filename, data)
+		chunks, err := s.Agent.IndexDocument(r.Context(), doc.Content)
+		if err != nil {
+			http.Error(w, "could not embed file: "+err.Error(), http.StatusBadGateway)
+			return
+		}
+		doc.Chunks = chunks
+		s.Store.Save(doc)
 		uploaded = append(uploaded, uploadedFile{
 			Name: fh.Filename,
 			Size: fh.Size,
