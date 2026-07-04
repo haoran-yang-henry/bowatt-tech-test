@@ -170,7 +170,7 @@ Inspired by mainstream research agent workflows, I decided to add a web search m
 1. Added an `embed` file in the `agent` package implementing document chunking, embedding, and cosine-similarity search — enabling similarity-based retrieval of documents against the user query.
 2. Set the chunking logic to a (1600, 200) overlapping scheme. More advanced chunking techniques are left as future work.
 3. For the multi-round web search, added **goroutines within a single round to run searches concurrently.**
-
+4. Applied multi round retrieval for document, modified the agent loop into plan-act-evaluate logic. Now the agent will perceive search result from web search and document retrieval, evaluate the found key points and address gaps for the next round. 
 
 
 ## Future Work
