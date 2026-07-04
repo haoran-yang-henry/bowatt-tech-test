@@ -16,6 +16,7 @@ func (s *Server) handleResearch(w http.ResponseWriter, r *http.Request) {
 
 	var body struct {
 		Request string `json:"request"`
+		Source  string `json:"source"` // "auto"(default) | "docs" | "web"
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid JSON body", http.StatusBadRequest)
@@ -40,7 +41,11 @@ func (s *Server) handleResearch(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	req := agent.Request{Query: body.Request, Chunks: chunks}
+	req := agent.Request{
+		Query:  body.Request,
+		Chunks: chunks,
+		Mode:   agent.ParseMode(body.Source)}
+
 	err := s.Agent.Answer(r.Context(), req, func(chunk string) error {
 		if _, err := w.Write([]byte(chunk)); err != nil {
 			return err

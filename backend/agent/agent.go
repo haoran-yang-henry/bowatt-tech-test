@@ -14,9 +14,31 @@ import (
 	"bowatt-backend/documents"
 )
 
+// SearchMode selects which sources the agent is allowed to consult.
+type SearchMode string
+
+const (
+	SearchAuto SearchMode = "auto" // documents + web
+	SearchDocs SearchMode = "docs" // uploaded documents only
+	SearchWeb  SearchMode = "web"  // web only
+)
+
+// ParseMode maps a raw request field to a SearchMode, defaulting to auto.
+func ParseMode(s string) SearchMode {
+	switch SearchMode(s) {
+	case SearchDocs:
+		return SearchDocs
+	case SearchWeb:
+		return SearchWeb
+	default:
+		return SearchAuto
+	}
+}
+
 type Request struct {
 	Query  string
 	Chunks []documents.Chunk
+	Mode   SearchMode
 }
 
 type Agent struct {
@@ -42,53 +64,109 @@ func New(apiKey, baseURL, model, embedModel, searchKey string) *Agent {
 }
 
 func (a *Agent) deriveFocus(ctx context.Context, req Request) (string, error) {
+	// Only ground the focus in documents when they are both present and allowed
+	// by the selected mode; otherwise derive it from the question alone.
+	useDocs := req.Mode != SearchWeb && len(req.Chunks) > 0
+
 	var b strings.Builder
 	b.WriteString("Documents (preview):\n")
 	b.WriteString(preview(chunkTexts(req.Chunks), 2000))
 	b.WriteString("\nUser question: " + req.Query + "\n\n")
-	if len(req.Chunks) > 0 {
+	if useDocs {
 		b.WriteString("In ONE sentence, state precisely what this research is about, grounded in both the documents and the question. Do not introduce a topic present in neither the documents nor the question.")
 	} else {
-		b.WriteString("No documents were provided. In ONE sentence, state precisely what this research is about, derived from the user question only.")
+		b.WriteString("In ONE sentence, state precisely what this research is about, derived from the user question only.")
 	}
 	messages := []map[string]string{{"role": "user", "content": b.String()}}
 	return a.complete(ctx, messages, false)
 }
 
-// main orchestration: step 1, setting research focus → step 2 retrieve from docs → step 3 web search loop → step 4 synthesize
+// main orchestration: step 1 set research focus → step 2 warm-start doc retrieval
+// → step 3 plan-act-evaluate loop (parallel doc + web search) → step 4 synthesize.
 func (a *Agent) Answer(ctx context.Context, req Request, emit func(string) error) error {
+	// Resolve which sources are permitted for this request.
+	useDocs := req.Mode != SearchWeb && len(req.Chunks) > 0
+	useWeb := req.Mode != SearchDocs
 
-	// step 1, set up the research focus to avoid draft during multistep resoning and searching
+	// step 1, set up the research focus to anchor every later step.
 	focus, err := a.deriveFocus(ctx, req)
 	if err != nil {
 		return err
 	}
 	emit("🎯 research focus: " + focus + "\n\n")
 
-	// step 2, retrieve the passages most relevant to the focus from the uploaded sources (embedded at upload time and cached in the store).
-	docs, err := a.retrieve(ctx, focus, req.Chunks, 8)
-	if err != nil {
-		return err
-	}
-
-	// step 3, multistep web search loop: searching-> key points summarizing
-	var notes []string
-	for round := 1; round <= a.maxRounds; round++ {
-		queries, enough, err := a.decideSearch(ctx, focus, notes)
+	// step 2, warm-start: retrieve the passages most relevant to the focus from the
+	// uploaded sources (embedded at upload time and cached in the store).
+	var docs []string
+	if useDocs {
+		docs, err = a.retrieve(ctx, focus, req.Chunks, 8)
 		if err != nil {
 			return err
 		}
-		if enough || len(queries) == 0 {
+	}
+
+	// step 3, plan-act-evaluate loop.
+	var notes []string
+	for round := 1; round <= a.maxRounds; round++ {
+		// EVALUATE: decide whether the gathered docs+notes already answer the focus.
+		// Skip it on the first round when nothing has been gathered yet — it would
+		// always report "not covered" and waste an LLM call.
+		var gaps string
+		if len(docs) > 0 || len(notes) > 0 {
+			g, covered, err := a.evaluate(ctx, focus, req.Query, docs, notes)
+			if err != nil {
+				return err
+			}
+			if covered {
+				break
+			}
+			gaps = g
+		}
+
+		// PLAN: turn the remaining gaps into doc and/or web queries.
+		p, err := a.plan(ctx, focus, docs, notes, gaps, useDocs, useWeb)
+		if err != nil {
+			return err
+		}
+		if !useDocs { // enforce the mode even if the model ignores the instruction
+			p.DocQueries = nil
+		}
+		if !useWeb {
+			p.WebQueries = nil
+		}
+		if p.Done || (len(p.DocQueries) == 0 && len(p.WebQueries) == 0) {
 			break
 		}
 
-		// add goroutine for web research
+		// ACT: re-retrieve documents and search the web concurrently.
 		emit(fmt.Sprintf("🔎 Research round %d  \n", round))
-		var results []Source
-		var mu sync.Mutex
-		var wg sync.WaitGroup
-		for _, q := range queries {
-			emit("  · Search: " + q + "\n")
+		for _, dq := range p.DocQueries { // keep every emit on the main goroutine
+			emit("  · Re-search docs: " + dq + "\n")
+		}
+		for _, wq := range p.WebQueries {
+			emit("  · Search: " + wq + "\n")
+		}
+
+		var (
+			mu      sync.Mutex
+			newDocs []string
+			results []Source
+			wg      sync.WaitGroup
+		)
+		for _, dq := range p.DocQueries {
+			wg.Add(1)
+			go func(q string) {
+				defer wg.Done()
+				more, err := a.retrieve(ctx, q, req.Chunks, 4)
+				if err != nil {
+					return
+				}
+				mu.Lock()
+				newDocs = append(newDocs, more...)
+				mu.Unlock()
+			}(dq)
+		}
+		for _, wq := range p.WebQueries {
 			wg.Add(1)
 			go func(q string) {
 				defer wg.Done()
@@ -99,54 +177,114 @@ func (a *Agent) Answer(ctx context.Context, req Request, emit func(string) error
 				mu.Lock()
 				results = append(results, found...)
 				mu.Unlock()
-			}(q)
+			}(wq)
 		}
-		wg.Wait()
+		wg.Wait() // single sync point for both doc and web work
+
+		docs = appendUniqueDocs(docs, newDocs)
+
 		if len(results) > 20 {
 			results = results[:20]
 		}
-		if len(results) == 0 {
-			continue
+		if len(results) > 0 {
+			emit("  · summarizing key points...\n")
+			summary, err := a.summarizeRound(ctx, focus, results)
+			if err != nil {
+				return err
+			}
+			notes = append(notes, summary)
 		}
-
-		emit("  · summarying key points...\n")
-		summary, err := a.summarizeRound(ctx, focus, results)
-		if err != nil {
-			return err
-		}
-		notes = append(notes, summary)
 	}
-	// step 4, summarizing all key points and streaming the answers
+
+	// step 4, synthesize all findings and stream the answer.
 	emit("\n📝 summarizing research result...\n\n")
 	return a.synthesize(ctx, req, docs, focus, notes, emit)
 }
 
-// planing and reflecting functions for search focus
-func (a *Agent) decideSearch(ctx context.Context, focus string, notes []string) ([]string, bool, error) {
+// researchPlan is the planner's decision for one loop iteration.
+type researchPlan struct {
+	Done       bool     `json:"done"`
+	DocQueries []string `json:"doc_queries"` // re-search the uploaded documents
+	WebQueries []string `json:"web_queries"` // search the web
+}
+
+// PLAN: given the current knowledge and the evaluator's gaps, decide what to
+// search next. Allowed sources are constrained by useDocs / useWeb.
+func (a *Agent) plan(ctx context.Context, focus string, docs, notes []string, gaps string, useDocs, useWeb bool) (researchPlan, error) {
 	var b strings.Builder
 	b.WriteString("Research focus (do NOT deviate from this): " + focus + "\n\n")
-	if len(notes) > 0 {
-		b.WriteString("Notes gathered so far:\n" + strings.Join(notes, "\n") + "\n\n")
+	if useDocs {
+		b.WriteString("Document knowledge so far:\n" + preview(docs, 1500) + "\n")
 	}
-	b.WriteString(`Every search query MUST stay strictly on the research focus above. ` +
-		`Ignore any earlier note that drifted away from the focus. ` +
-		`If the notes already cover the focus, or no on-focus web search would help, reply {"enough": true}. ` +
-		`Otherwise reply {"enough": false, "queries": ["..."]} with up to 3 queries directly about the focus. ` +
+	if len(notes) > 0 {
+		b.WriteString("Web findings so far:\n" + strings.Join(notes, "\n") + "\n\n")
+	}
+	if gaps != "" {
+		b.WriteString("Gaps identified by the evaluator (address these):\n" + gaps + "\n\n")
+	}
+	switch {
+	case useDocs && useWeb:
+		b.WriteString(`You may re-search the uploaded documents (doc_queries) AND the web (web_queries). `)
+	case useDocs:
+		b.WriteString(`You may ONLY re-search the uploaded documents (doc_queries). Leave web_queries empty. `)
+	case useWeb:
+		b.WriteString(`You may ONLY search the web (web_queries). Leave doc_queries empty. `)
+	}
+	b.WriteString(`Return JSON {"done": bool, "doc_queries": ["..."], "web_queries": ["..."]}, ` +
+		`each list up to 3 queries tied to the gaps. If the focus is fully answerable now, reply {"done": true}. ` +
 		`Reply in JSON only.`)
 
 	messages := []map[string]string{{"role": "user", "content": b.String()}}
 	content, err := a.complete(ctx, messages, true)
 	if err != nil {
-		return nil, false, err
+		return researchPlan{}, err
+	}
+	var out researchPlan
+	if err := json.Unmarshal([]byte(content), &out); err != nil {
+		return researchPlan{Done: true}, nil // treat unparseable output as convergence
+	}
+	return out, nil
+}
+
+// EVALUATE: judge whether the gathered docs+notes actually answer the focus, and
+// return the specific missing pieces so the planner can target them next round.
+func (a *Agent) evaluate(ctx context.Context, focus, query string, docs, notes []string) (gaps string, covered bool, err error) {
+	var b strings.Builder
+	b.WriteString("Research focus: " + focus + "\nUser question: " + query + "\n\n")
+	b.WriteString("Documents:\n" + preview(docs, 1500) + "\n")
+	b.WriteString("Web findings:\n" + strings.Join(notes, "\n") + "\n\n")
+	b.WriteString(`Judge whether the gathered information ACTUALLY answers the focus. ` +
+		`Return JSON {"covered": bool, "gaps": ["specific missing pieces"]}. Reply in JSON only.`)
+
+	messages := []map[string]string{{"role": "user", "content": b.String()}}
+	content, err := a.complete(ctx, messages, true)
+	if err != nil {
+		return "", false, err
 	}
 	var out struct {
-		Enough  bool     `json:"enough"`
-		Queries []string `json:"queries"`
+		Covered bool     `json:"covered"`
+		Gaps    []string `json:"gaps"`
 	}
 	if err := json.Unmarshal([]byte(content), &out); err != nil {
-		return nil, true, nil
+		return "", true, nil // treat unparseable output as covered to avoid a stuck loop
 	}
-	return out.Queries, out.Enough, nil
+	return strings.Join(out.Gaps, "\n"), out.Covered, nil
+}
+
+// appendUniqueDocs appends src to dst, skipping documents already present.
+func appendUniqueDocs(dst, src []string) []string {
+	seen := make(map[string]struct{}, len(dst))
+	for _, d := range dst {
+		seen[d] = struct{}{}
+	}
+	for _, d := range src {
+		if _, ok := seen[d]; ok {
+			continue
+		}
+		seen[d] = struct{}{}
+		dst = append(dst, d)
+	}
+	return dst
 }
 
 // context control: transform the search result into key points
