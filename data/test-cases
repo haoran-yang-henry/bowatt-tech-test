@@ -1,0 +1,84 @@
+# Test Cases — Research Agent
+
+You can test with the `.txt` file provided in `data/`, or bring your own.
+Note that the system currently supports uploading `.txt` files only.
+
+## How to test
+
+1. Download the `.txt` file from `data/`, or prepare your own `.txt` file.
+2. Decide on a query.
+3. In the frontend, upload the file, enter the query, and click **Research**.
+4. Watch the output!
+
+---
+
+## Case 1 — Pure query, no relevant document
+
+- **Query:** "Please search on the Web, who will win the 2026 FIFA World Cup?"
+- **Scenario:** Query-based research
+- **How to run:** Either upload no document, or upload the URS to test robustness
+  against an unrelated document.
+- **Purpose:** Verify the agent answers a pure web question, and stays robust when
+  an uploaded document is completely unrelated (the URS is a pharmaceutical spec;
+  the question is about football).
+- **What to watch:**
+  - `deriveFocus` grounds the focus in both the document and the question, and
+    retrieval returns the top-k chunks with no similarity threshold — so
+    irrelevant URS passages may leak in. Confirm the focus and final answer are
+    not polluted by the document.
+  - Web-result timeliness: the 2026 World Cup may be ongoing or just concluded at
+    test time.
+
+## Case 2 — Whole-document summary
+
+- **Query:** "Give me a brief overview of this requirements document."
+- **Scenario:** Document-based research
+- **Purpose:** Test summarization quality over top-k retrieval.
+- **What to watch:** A good summary needs global coverage, but retrieval only
+  returns the 8 chunks closest to the focus. The URS spans many sections
+  (GEN / AUT / MET / ELC / EHS / MNT / FLX / DOC / CLN). Check whether whole
+  sections are systematically dropped — this exposes the lossiness of top-k
+  retrieval for broad tasks.
+
+## Case 3 — Group requirements by department
+
+- **Query:** "Group the requirements in this document by department."
+- **Scenario:** Document-based research (full enumeration / restructuring)
+- **Purpose:** Stress the fundamental limit of top-k retrieval on a task that
+  requires seeing *every* requirement, not just the most relevant few.
+- **What to watch:** The agent is likely to produce a plausible-looking but
+  seriously incomplete grouping, because it only ever sees ~8 chunks. This
+  directly demonstrates the single-stage dense-retrieval limitation noted in
+  Future Work.
+
+## Case 4 — Section-scoped risk identification
+
+- **Query:** "Based on Section 5.10 of the requirements document, help me
+  identify potential risks in advance."
+- **Scenario:** Document + web research
+- **Purpose:** Test targeted retrieval of a specific section plus reasoning, with
+  web support for industry best practices.
+- **What to watch:** Section 5.10 covers Maintenance (MNT-01 to MNT-04). Confirm
+  retrieval reliably fetches the MNT passages and does not bleed in neighbouring
+  sections (5.9 / 5.11) due to the (1600, 200) chunk windows. Check whether the
+  plan-act-evaluate loop pulls in relevant external best-practice sources.
+
+## Case 5 — Requirements-driven market research (document + web synthesis)
+
+- **Query:** "This URS requires single-use, disposable product-contact flow path
+  assemblies with extractables & leachables documentation (see GEN-25, GEN-28,
+  GEN-33). Which commercial single-use solutions on the market meet these
+  requirements, and how do they address USP 665 / 1665 extractables & leachables?"
+- **Scenario:** Document + web research 
+- **Purpose:** Exercise the full document-plus-web synthesis path: the agent must
+  ground specific requirements from the document, then research real-world
+  solutions on the web that satisfy them. Neither source alone can answer — the
+  plan-act-evaluate loop must combine both.
+- **What to watch:**
+  - Retrieval fetches the relevant single-use / E&L requirements (GEN-25, GEN-28,
+    GEN-33, and the USP 665 / 1665 references) rather than unrelated sections.
+  - At least one web round runs and surfaces actual vendors or products.
+  - The final answer maps each requirement to how the found solutions address it,
+    with source citations — not a generic overview that ignores the document.
+
+

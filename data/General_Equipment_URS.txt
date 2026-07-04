@@ -1,0 +1,1345 @@
+User Requirement Specification (URS)
+for General Equipment
+VERSION 1
+December 31, 2023
+
+Revision History
+
+Revision Number
+
+Date
+
+Description of Changes
+
+0
+
+August 1, 2023
+
+First Draft
+
+0.1
+
+Sept 22, 2023
+
+Flexibility Team Input
+
+1.0
+
+Dec 31, 2023
+
+Final
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+2
+
+Table of Contents
+
+1 Purpose and Scope .......................................................................................................................... 4
+2 Area of Application ........................................................................................................................... 4
+3 Responsibilities ................................................................................................................................. 4
+4 Process............................................................................................................................................... 5
+5 Requirements ................................................................................................................................... 5
+5.1 Product Quality Critical Assessment ...................................................................................... 5
+5.2 General Requirements .............................................................................................................. 6
+5.3 Functional Requirements ......................................................................................................... 9
+5.4 Cleaning, Sanitization and STERILIZATION Requirements ................................................. 9
+5.5 Utility Requirements ............................................................................................................... 10
+5.6 Automation Requirements .................................................................................................... 10
+5.7 Metrology Requirements ....................................................................................................... 12
+5.8 Electrical Requirements ......................................................................................................... 13
+5.9 Health, Safety, and Environment .......................................................................................... 14
+5.10 Maintenance requirements ................................................................................................. 15
+5.11 Flexibility ................................................................................................................................ 15
+5.12 Scope of required documentation ..................................................................................... 17
+6 Abbreviations & Acronyms............................................................................................................ 18
+7 Attachments and References........................................................................................................ 18
+a.
+
+Attachments .......................................................................................................................... 18
+
+b.
+
+References ............................................................................................................................. 19
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+3
+
+1 Purpose and Scope
+The purpose of this User Requirements Specification (URS) is to specify general equipment
+requirements for unit operations in accordance with its technical requirements and
+applicable current local and regulatory, environmental, health, and safety, and automation
+standards.
+The intent is to define the critical attributes on which the system qualification will be based.
+This document also details performance requirements and various design criteria for the
+equipment to be used in the pharmaceutical environment under cGMP conditions. However,
+it is not the intent of this document to detail all mechanical, electrical and control
+requirements. The vendor shall supply all subordinate components necessary to meet the
+performance requirements established herein. Should the vendor find it necessary to
+deviate from the specific design and performance requirements detailed in this document,
+the vendor shall clearly state all the deviations in the proposal and give the reason(s) for
+each deviation.
+A unit operation will be referred to as “System” in this document. The system will be used in
+a continuous purification process for the manufacture of biopharmaceutical products (e.g.
+monoclonal antibody production). The system will be used for a 500Liter, 2,000-Liter, and
+4,000-Liter perfusion process over a range of titers. The system will operate continuously for
+twenty-eight (28) days. The equipment will be installed in a cGMP environment, specifically
+in non-hazardous Grade C or Grade D clean room with temperature control (15-25°C)
+This document describes general requirements, including cleaning, automation, metrology,
+electrical, health/safety/environment requirements that is typically expected. Refer to unit
+operation specific URS for specific process requirements.
+
+2 Area of Application
+This URS applies to the following systems:
+Item
+1
+
+Description
+Any Unit Operation
+
+Tag Number
+NA
+
+3 Responsibilities
+Function
+
+Purpose of Signature
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+4
+
+Local User
+
+Project Engineering
+
+Automation
+
+Health, Safety and Environment
+
+Quality
+
+I am signing on behalf of the user and
+confirm that this document accurately
+reflects the technical user requirements.
+I am signing/authorizing this document and
+agree that the technologies specified in this
+document are correct and in line with
+current technical concepts and that each
+requirement is specific and measurable for
+requirements affecting Product Quality.
+I am authorizing this document and agree
+that the automation requirements specified
+in this document are correct and in line with
+current technical concepts.
+I am authorizing this document and agree
+that the requirements specified in this
+document are in line with current health,
+safety and environmental standards.
+I am signing on behalf on the Quality Unit
+and confirm that the content of this
+document is compliant with relevant
+internal and external cGMP standards.
+
+4 Process
+A vendor agnostic manufacturing of pharmaceuticals (mAb) under cGMP conditions with a
+scale of a 500Liter, 2,000-Liter, and 4,000-Liter perfusion process over a range of titers. See
+process equipment specific URS for detailed description of unit operation.
+
+5 Requirements
+5.1 Product Qualit y Crit ical A ssessm ent
+An assessment has been performed to determine which requirements listed in this
+specification are critical to product quality. Where a requirement is deemed to be product
+quality critical, “Yes” is stated. If a requirement has been determined - as non-critical to
+product quality, one of the following justifications is provided as its rationale:
+(1)
+(2)
+(3)
+(4)
+
+Health, safety, and environment critical (for personnel and/or equipment only).
+Business critical (productivity, operations, process efficiency).
+Technical requirement with indirect or no impact on product quality, patient safety,
+and CGMP data integrity.
+Non-product contact (applies to equipment that is not in direct contact with the
+product).
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+5
+
+(5)
+
+Critical but quality critical requirement is covered by another requirement in this
+URS. Reference is provided to the critical requirement.
+
+The justifications (1 to 5) above are applicable for the entire document. At least one
+justification shall be stated per requirement.
+
+5.2 General Requirem ent s
+
+ID
+
+GEN-01
+
+Requirement
+Equipment shall have suitable mobility to move around the
+facility. The frame shall be stable in operation and have nonmarking lockable wheels. The frame and equipment shall not
+cause damage to the flooring in the manufacturing area during
+routine use.
+
+Product
+Quality
+Critical
+(Yes/No)
+
+Comments
+
+N
+
+1, 3
+
+GEN-02
+
+Instrument air service pneumatic tubing and/or piping lengths
+between system internal components (valves, instruments,
+and filters) shall be as short as possible.
+
+N
+
+3
+
+GEN-03
+
+The system shall be designed for easy access to all relevant
+components during production for sampling, tube welding,
+calibration and maintenance.
+
+N
+
+2, 3
+
+GEN-04
+
+Measures shall be taken to prevent overpressurization to avoid
+bursting.
+
+N
+
+1
+
+GEN-05
+
+Operation of system (Connection and disconnection of
+components and tubing) shall occur under closed conditions.
+
+Y
+
+GEN-06
+
+Internal Metallic parts / surfaces in contact with clean gases
+shall meet Material AISI 316L or equivalent or better.
+
+Y
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+6
+
+GEN-07
+
+All parts in contact with process fluid, media or clean gasses
+shall be made from corrosion resistant (inert) materials which
+require material certificates:
+- In the case of metal : DIN EN 10204 material certificates 3.1
+or 2.2 (in case of 2.2 including spot checks for incoming
+material)
+- In the case of polymers/plastics: Conformity with the FDA
+Regulations 21 CFR 170-199.NNNN, Regulation (EC) No.
+2023/2006, USP Class VI, animal origin free (AOF) compliance
+according to EMEA 410/01.
+
+GEN-08
+
+Y
+
+Y
+The system design shall comply to the current ASME BPE
+pharmaceutical standards.
+
+GEN-09
+
+GEN-10
+
+External metallic parts/surfaces shall be compatible
+(chemically resistant, nonpermeable) with cleaning and
+sanitization agents specified (e.g. sporicidal agents, peracetic
+acid, 70% IPA).
+
+Lubricants (including oil and grease) in contact with Process
+Fluid, Media or Clean Gasses: Food grade with FDA compliance
+to 21 CFR part 178, certified to USDA H1 or equivalent, animal
+origin free (AOF) compliance according to EMEA 410/01.
+
+Y
+
+Y
+
+GEN-11
+
+The system shall be delivered clean and free of residue.
+(Suppliers shall be required to submit cleaning procedure
+documentation.,
+
+Y
+
+GEN-12
+
+Metallic parts / surfaces with no product contact, but visible in
+production area shall be mechanically polished or glass bead
+blasted.
+
+Y
+
+GEN-13
+GEN-14
+GEN-17
+
+GEN-22
+
+Welding seams shall be ground flush with base material and
+smooth.
+All instrument air service pneumatic tubing shall be made from
+PTFE.
+
+N
+
+3
+
+N
+
+3
+
+System shall have a Human Machine Interface (HMI), that is
+cleanable and capable of being operated with a gloved hand.
+
+N
+
+4
+
+N
+
+3
+
+System shall allow use of single-use components from other
+vendors if required (e.g. in a force majeure situation) with any
+additional components fully compatible with proposed process
+design.
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+7
+
+GEN-23
+
+The single-use flow path assembly shall be supplied with
+sufficient packaging to protect the outer packaging from
+puncture by components with sharp edges.
+
+N
+
+3
+
+GEN-24
+
+The single-use flow path assembly shall be supplied doublebagged.
+
+N
+
+3
+
+GEN-25
+
+GEN-27
+GEN-28
+
+All product contact components of the system shall be single
+use. Single-use assemblies shall be supplied gamma-irradiated
+(25-50 kGy)or approved equivalent) and ready to use without
+prior sterilization.
+Single-use assembly shall be able to be assembled with
+minimal connections and complexity. Genderless connections
+are preferred.
+Single-use assembly shall have an accompanying extractables
+and leachables documentation Package and shall meet current
+BPOG protocol and USP 665 and 1665
+
+Y
+
+N
+
+3
+
+Y
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+8
+
+GEN-29
+
+Sensors and probes shall be disposable (where possible) and supplied integral to the
+single-use assemblies or capable for aseptic connection. Sensor tolerances and
+robustness to be defined in Unit Op specific URS.
+
+N
+
+GEN-30
+
+Single-use assemblies shall be supplied and manufactured in a facility which has
+been assessed for provision of GMP consumables.
+
+Y
+
+GEN-31
+
+Single-use assembly shall have a shelf life which does not exceed its components.
+Post-sterilization room temperature shelf life must be > 1 year.
+
+Y
+
+GEN-32
+
+Manufacturing of the single-use assemblies shall take place in a minimum Iso 8
+clean room.
+
+Y
+
+GEN-33
+
+All single-use flow path assemblies shall comply with USP 665 and 1665.
+
+3
+
+Y
+
+GEN-34
+
+All single-use flow path assemblies shall be ADCF-free and BSE-TSE free (animal
+origin free (AOF) compliance according to EMEA 410/01).
+
+Y
+
+GEN-36
+
+The system shall be compatible with Data Historian or PI software (or equivalent, as
+proposed by supplier).
+
+Y
+
+3
+
+GEN-38
+
+Single-use assembly shall be able to be recycled or a disposal mechanism provided
+that limits impact to the environment.
+The set up of system should be possible within one shift.
+Single use assemblies and connections (including welding) shall be designed to
+ensure no breach of sterility during routine operation and assembly.
+
+N
+
+3
+
+N
+
+2
+
+GEN-39
+GEN-40
+
+5.3 Funct ional Requirem ent s
+See unit operation specific URS for detailed functional requirements.
+
+5.4 Cleaning, Sanit izat ion and STERILIZ A TION Requirem ent s
+
+ID
+CLN-01
+
+CLN-02
+
+Requirement
+The system shall be designed such a way
+(minimum ledges, non-shedding, sealed,
+crevice free) that it can be easily and
+efficiently cleaned.
+The system product contact flow path must
+allow for sterilization by gamma irradiation
+(min 25 kGy) or x-ray prior to use.
+
+Product
+Quality
+Critical
+(Yes/No)
+
+Comments / Questions
+
+Y
+
+Y
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+9
+
+CLN-03
+
+The system product contact surfaces shall be
+compatible with 1.0N NaOH
+
+5.5 Ut ilit y Requirem ent s
+See unit operation specific URS for detailed Utility Requirements.
+
+5.6 A ut om at ion Requirem ent s
+
+ID
+AUT-01
+
+AUT-02
+
+AUT-03
+
+AUT-04
+
+AUT-05
+
+Requirement
+The volumetric flow rate of the system is to be
+continuously adjustable within pre-defined limits
+during operation based on a target flow rate input
+from a supervisory control (SCADA) system.
+The system shall monitor and alarm faults with the
+following:
+1. Network communications
+2. Process status
+3. Field instrumentation
+4. PID control loops
+5. Alarms - (Arrival, Acknowledgement & Departing)
+6. Process pause and stop
+7. E-stop activated
+8. Loss of instrument air
+
+Product
+Quality
+Critical
+(Yes/No)
+
+Questions / Comments
+
+Y
+
+Y
+
+The system shall be in full compliance with FDA
+Regulation 21CFR Part 11, pertaining to Electronic
+Records and Electronic Signatures, in relation to
+access control, data integrity, audit trail.
+
+Y
+
+The system shall generate the following electronic
+records: reports, parameters (including recipes),
+process trends, alarms, warnings, messages.
+
+N
+
+3
+
+The system shall display the following: process
+equipment status, device status (valves, motors, PID
+loops), instrumentation (digital and analog), trending
+(real-time and historical), alarms (process and
+system), warnings (process and system), messages
+(process and system), operator prompts (when
+manual operations or interventions are required).
+
+N
+
+3
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+10
+
+AUT-06
+
+AUT-07
+
+AUT-08
+
+The system shall control the following: Process (step
+sequencing with prompts for manual intervention
+when required) and Devices (automatic and manual
+operation).
+The following modes of operation shall be provided:
+1. Automatic Mode - The system is acquiring data,
+handling alarms and performing Audit Trail
+management. The system is actively controlling the
+process in this mode by running the relevant process
+sequences, monitoring and controlling all
+equipment.
+2. Semi Automatic Mode - The system is acquiring
+data, handling alarms and performing Audit Trail
+management. Sequence step transitions are
+manually validated in this mode. The system is
+monitoring and controlling all equipment?
+3. Maintenance Mode - The system is acquiring
+data, handling alarms and performing Audit Trail
+management. The HMI is used to manually control
+the individual actuators. This operation mode
+requires Engineer access privileges.
+It shall be possible to operate all valves, motors and
+PID loops, including Modulating Valves and Variable
+Speed Drives, in manual maintenance mode from
+the HMI.
+
+Y
+
+Y
+
+N
+
+3
+
+AUT-09
+
+Safety and equipment protection logic shall be
+processed continuously, where applicable.
+
+N
+
+1
+
+AUT-10
+
+The system shall fail safe in the event of a failure or
+critical alarm.
+
+N
+
+1
+
+N
+
+3
+
+AUT-11
+
+AUT-12
+
+AUT-13
+
+AUT-14
+AUT-15
+
+The vendor shall specify in the Design Specification,
+actions to be taken on failure of following: Power
+outage (and subsequent restoration of power), loss
+of communication, valve error (failed to open, failed
+to close), motor error (failed to run, failed to stop),
+analogue input (under range & over range).
+Alarms shall have a configurable parameter that
+defines the type of alarm as absolute alarm or
+deviation alarm.
+
+Y
+
+Alarms shall have a configurable parameter that
+defines alarm set points for the following monitoring
+levels: low-low, low, high, and high-high.
+
+Y
+
+Alarms shall have a configurable parameter that
+defines alarm deadband to configure an alarm to
+turn on at one value and clear at another.
+
+Y
+
+Alarm messages, acknowledgements and other
+events shall be able to be included in reports.
+
+Y
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+11
+
+Alarm information provided in reports shall include
+Date, Time, Alarm Text and Alarm Acknowledgement
+with Username (or User ID).
+
+Y
+
+AUT-17
+
+System screen updates and control actions shall be
+updated within two seconds.
+
+N
+
+AUT-18
+
+Original time stamping of raw data shall be used for
+system reports.
+Server and PC clocks shall be synchronized with one
+master clock (NTP time server) automatically at 15
+minute intervals.
+
+AUT-16
+
+AUT-19
+
+Y
+Y
+
+AUT-20
+
+The System shall be capable of being configured for
+Daylight Savings Time.
+
+AUT-21
+
+Data logging intervals shall be configurable.
+All automatic valves shall fail closed except those
+which are specified as fail open.
+System shall have a Human Machine Interface (HMI),
+that is cleanable and capable of being operated with
+a gloved hand.
+The system shall have the capability to issue an
+alarm warning system to operators if alert or action
+limits are breached on key operating parameters
+and when other equipment-related issues are
+encountered during processing.
+Any instruments that monitor critical operation
+parameters shall have pre-defined process
+tolerances.
+The system shall have a mechanism for automatic
+Pause / Stop of the process if parameters are
+breached.
+Vendor shall provide a control system to
+monitor and/or control the system.
+All data generated by equipment shall be
+capable of being communicated to other
+systems via Ethernet.
+
+AUT-22
+AUT-23
+
+AUT-24
+
+AUT-25
+AUT-26
+AUT-27
+AUT-28
+
+3
+
+Y
+N
+
+3
+
+N
+
+1
+
+N
+
+4
+
+Y
+
+Y
+Y
+
+Y
+
+5.7 Met rology Requirem ent s
+
+ID
+
+Requirement
+
+Product
+Quality
+Critical
+(Yes/No)
+
+MET-01
+
+All process measurement devices shall be
+calibratable.
+
+Y
+
+Comments / Questions
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+12
+
+MET-02
+
+MET-03
+
+MET-04
+
+MET-05
+
+Cable-lengths and installation of measuring
+instruments shall ensure easy calibration (cable
+loops and easy removal) to allow calibration at
+floor level.
+
+N
+
+3
+
+All instruments shall be delivered calibrated
+(dated no more than three months before
+installation date).
+All transmitters shall be calibrated to NIST
+traceable standards. Where possible a threepoint calibration shall be performed: 0%, 50%,
+and 100% of the scale.
+Instrument cabling and transmitters shall be
+designed to ensure minimal impact on signal
+robustness and accuracy.
+
+5.8 Elect rical Requirem ent s
+
+ID
+
+Requirement
+
+Product
+Quality
+Critical
+(Yes/No)
+
+ELC-04
+
+The power supply (high voltage: pumps, motors,
+etc.) shall be completely separated from measuring
+and control technology (low voltage), to exclude
+disturbance of measurement signals.
+System shall be compatible with site electrical
+utilities (120V single phase or 480V three phase). If
+not, transformer shall be provided.
+The equipment shall be furnished with all
+wiring, controls, motor starters, motor control
+devices and circuits, etc. for operation of the
+complete system, pre-wired to a single
+connection point on each skid and shall
+comply with NFPA 70 “National Electrical
+Code” and International Electrical Code.
+A fused and lockable disconnect switch shall
+be included on each skid to cut power to the
+entire skid. This disconnect shall be included
+in the enclosure that accepts the single
+connection for external power.
+
+ELC-05
+
+Panel enclosures shall be NEMA 4X.
+
+N
+
+ELC-06
+
+All engineered wiring systems and their
+components shall be UL listed or recognized
+
+N
+
+ELC-01
+
+ELC-02
+
+ELC-03
+
+Comments / Questions
+
+N
+
+3
+
+N
+
+3
+
+N
+
+N
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+13
+
+and labeled as such or shall be certified by an
+approved electrical inspection facility.
+
+5.9 Healt h, Safet y , and Env ironm ent
+
+Requirement
+
+Product
+Quality
+Critical
+(Yes/No)
+
+Compliance with local HSE legislation is required.
+
+N
+
+1
+
+Compliance of the product with the relevant
+directives - standards shall be confirmed by the
+CE marking and the declaration of conformity (EC
+declaration of conformity). With these the
+manufacturer confirms that the product
+complies with all European directives and
+standards that address the areas concerning the
+product.
+
+N
+
+1
+
+EHS-04
+
+Equipment shall be stable during operation.
+
+N
+
+1
+
+EHS-05
+
+Equipment shall pose no risk to manufacturing
+operator's health and safety.
+The equipment shall comply with PUWER, Health
+& Safety at Work Act, Safety of Machinery
+EN60204.
+
+N
+
+1
+
+N
+
+1
+
+N
+
+1
+
+N
+
+1
+
+N
+
+1
+
+N
+
+1
+
+N
+
+1
+
+N
+
+1
+
+ID
+EHS-01
+
+EHS-02
+
+EHS-06
+
+EHS-07
+
+EHS-08
+EHS-11
+
+EHS-16
+
+EHS-17
+
+EHS-18
+
+The equipment and system shall have no sharp
+edges that may cause damage to facility during
+transfer or increased risk of injury to operators.
+The system shall have an emergency stop that
+stops the operation in a safe manner and is
+accessible to operators
+Safety and equipment protection logic shall be
+processed continuously, where applicable.
+Surfaces that may be contacted by
+personnel shall be insulated so the
+external temperature cannot exceed 50°C
+and be below 0°C.
+The noise level during production, with all
+system parts activated and at maximum
+capacity, may not exceed 80dB(a) at the
+normal operator point.
+Rotating or moving equipment shall be
+designed with appropriate personnel
+protection.
+
+Comments / Questions
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+14
+
+EHS-19
+
+The operation shall be designed to avoid
+the need for heavy lifting.
+
+EHS-20
+
+The system shall be designed and
+constructed to meet the local seismic
+requirement of the project site.
+
+N
+
+1
+
+5.10 Maint enance requirem ent s
+
+ID
+MNT-01
+
+Requirement
+All major components shall be tagged and fully
+traceable to the P&ID.
+
+Product Quality
+Critical
+(Yes/No)
+
+Comments
+
+Y
+
+=
+
+MNT-02
+
+Recommended preventive maintenance and
+calibration shall be identified in the technical
+documentation, with their suggested frequency.
+
+N
+
+3
+
+MNT-03
+
+Support frames shall be made of 304, 316, or 316L
+stainless steel and have adjustable feet.
+
+N
+
+3
+
+MNT-04
+
+Equipment shall be able to be removed from the
+clean area / be accessible for maintenance.
+
+N
+
+3
+
+5.11 Flexibilit y
+Flexibility requirements shall be applied at the unit operation level to ensure unit operation systems can
+be interchanged for equivalent while maintaining system performance.
+
+ID
+FLX-01
+FLX-02
+
+Requirement
+Key system components can be exchanged for
+equivalent (defined in unit op specific URS) without
+requiring customization.
+System performance characterization shall be defined
+to ensure system equivalence and conformance to
+industry standard.
+
+Product Quality
+Critical (Yes/No)
+
+Comments
+
+N
+
+2, 3
+
+Y
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+15
+
+FLX-03
+
+System connections (physical, data, power, etc.)
+designed with appropriate Standards to enable
+exchange without requiring customization.
+
+FLX-04
+
+System shall accept smart components (SelfMonitoring, Analysis and Reporting Technology)
+Example: pumps, probes, instrumentation.
+
+FLX-05
+
+System capabilities can be changed by adding or
+removing components (hardware or consumable)
+without requiring customization and aligning with FLX02, FLX-03 and FLX-04
+System POL designed to automatically connect and
+configure new components with added system
+capabilities using DNP protocol and NAMUR MTP.
+Scalability needs are accommodated by
+interchangeable component design (reference FLX04). E.g., to meet a wide range of flows required in
+specific equipment URS, different ID single-use flow
+path can be utilized.
+Autonomous system and component tests facilitate
+verification of correct configuration and performance
+in a cGMP validated state based on the process
+requirements for use case.
+Example: System MTP file contains system capability
+and is recognized by POL and compared against predefined process requirements.
+System capable of verification (as per FLX-08) upon
+reconfiguration (new use case).
+Product contact systems shall be capable of operating
+in environments as high as grade C and as low as CNC
+System is capable of completing automated system
+verification upon moving to a new location (see FLX08).
+
+FLX-06
+FLX-07
+
+FLX-08
+
+FLX-09
+FLX-10
+FLX-11
+
+N
+
+2, 3
+
+N
+
+3
+
+N
+
+2, 3
+
+N
+
+3
+
+N
+
+2, 3
+
+N
+
+3
+
+N
+
+3
+
+N
+
+3
+
+N
+
+3
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+16
+
+5.12 Scope of required docum ent at ion
+Standard technical documentation shall be provided in paper or electronic form.
+
+ID
+
+DOC-01
+
+DOC-02
+
+DOC-03
+
+DOC-04
+
+Requirement
+
+Product
+Quality
+Critical
+(Yes/No)
+
+The standard scope of technical documentation should include:
+1. P&ID diagram
+2. Layout installation drawings including: (a) general arrangement
+drawing, (b) 3D model drawing.
+3. Technical documentation and Bill of Material of all built-in elements,
+components, instruments and equipment.
+4. Certificates and declarations of built-in materials and equipment parts
+5. Wiring diagram
+6. Power panel general assembly drawing
+7. Electrical and pneumatic connections
+8. Instrument datasheets
+9. Software and hardware documentation for PLC: (a) Software
+Functional Specification (FS), (b) Hardware design specification (HDS). PLC
+programming for complete operation of equipment.
+10. Spare parts list
+11. EC Declarations and certificates to all applicable EC directives (PED,
+Machinery Directive, EMC, etc.)
+12. Factory Calibration Certificate (original; NIST traceable)
+13. Utility Summary
+14. Gas / process contact material certifications.
+
+N
+
+3
+
+The following instruction manuals are to be included:
+1. Installation of Equipment
+2. Routine Operation of the Equipment
+3. Maintenance of the Equipment
+4. Calibration Procedures for Measuring Instruments
+
+N
+
+3
+
+The following quality and validation documents should be available
+(possibly at additional charge to customer)1. Functional Requirement Specification (FRS)
+2. Software Design Specification (SDS)
+3. Design Qualification (DQ)
+4. Factory Acceptance Test (FAT)
+5. Site Acceptance Test (SAT)
+6. Installation Qualification (IQ)
+7. Operational Qualification (OQ)
+Vendor shall provide extractable test report consistent with BPOG
+extractable protocol.
+
+Questions /
+Comments
+
+Y
+Y
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+17
+
+DOC-05
+
+Documentation package should be submitted as:
+1. one (1) set of documentation as hardcopy, At a minimum, a table of
+contents, tabs separating each section with the section title
+appearing on each tab, and page numbers corresponding to the
+page numbers defined within the table of contents are required.
+2. one (1) copy of other documents in PDF format on a suitable medium
+(e.g. CD/DVD/US)
+
+DOC-06
+
+DOC-07
+
+N
+
+2
+
+The FS should include the following information, as a minimum:
+control system hardware and software standards; system
+architecture; alarm list; I/O list; sequence of operations including
+all safety interlocks.
+The Detailed Design Spec (DDS) should include the following
+information, in addition to the final version of all documents
+included in the FS, as a minimum: I/O list, Alarm list, Interlock
+list, final hardware drawings, including bill of materials; detail
+wiring diagrams; operations and maintenance manuals for all
+components
+
+6 Abbreviations & Acronyms
+Abbreviation / Acronym
+URS
+cGMP
+GMP
+POL
+DNP
+MTP
+
+PEA
+
+Description
+User Requirement Specifications
+Current Good Manufacturing Practices
+Good Manufacturing Practices
+Process Orchestration Layer
+Discover/Negotiate/Pair technology
+Modular Type Package
+
+Process Equipment Assembly (currently as
+per VDI/VDE/NAMUR 2658, Sheet 1)
+
+7 Attachments and References
+a. A t t achm ent s
+#
+
+Title
+
+Doc. No.
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+18
+
+b. References
+#
+
+Title
+ASME BioProcessing Equipment Standard
+21 CFR part 178, certified to USDA H1 or equivalent,
+animal origin free (AOF) compliance according to EMEA
+410/01.
+
+Doc. No.
+
+User Requirement Specification (URS) for General Equipment | December 31, 2023
+
+19
+
+
