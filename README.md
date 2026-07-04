@@ -203,6 +203,13 @@ Inspired by mainstream research agent workflows, I decided to add a web search m
 4. Optimize the code structure to reduce cost and improve runtime performance, especially in production scenarios.
 
 
+# Test
+
+Sample material for trying the agent lives in [`data/`](data/): a `.txt` requirements document ([`General_Equipment_URS.txt`](data/General_Equipment_URS.txt)) and a set of ready-made test cases ([`test-cases`](data/test-cases)).
+
+To test: download the `.txt` file (or bring your own — only `.txt` uploads are supported), then in the frontend upload the file, enter a query, and click **Research**. Pick a query from `test-cases`, or write your own. Watch the streamed research focus, search rounds, and final answer.
+
+
 
 
 
