@@ -7,11 +7,14 @@ A research-agent that answers the user's question by combining their uploaded so
 ```
 Frontend -> Go backend
              |- upload -> extract -> chunk -> embedding -> store (short-term memory)
-             |- query  -> agent orchestration:
+             |- query (+ source mode: auto | docs | web) -> agent orchestration:
                           |1. derive focus  <- anchor, threads through 2-4
-                          |2. retrieve from stored document embeddings (short-term memory)
-                          |3. search loop (LLM-determined, max 3 rounds)
-                          |4. synthesize and stream answers
+                          |2. warm-start retrieval from stored document embeddings
+                          |3. plan-act-evaluate loop (max 3 rounds):
+                          |     ┌─> evaluate : do docs + web notes answer the focus? -> gaps
+                          |     │   plan     : turn gaps into doc and/or web queries (per mode)
+                          |     └── act      : re-retrieve docs + web search, concurrently
+                          |4. synthesize and stream cited answer
 ```
 
 
@@ -19,8 +22,11 @@ Frontend -> Go backend
 
 - Upload text files → chunked & embedded into a short-term memory store
 - Retrieval-augmented answering (cosine similarity over document chunks)
+- Multi-round document retrieval (warm-start + gap-driven re-retrieval)
 - Focus anchor to prevent topic drift
-- Multi-round, LLM-driven web search (Tavily, max 3 rounds)
+- Plan-act-evaluate loop: an evaluate step finds gaps, a plan step decides the next document and/or web queries (max 3 rounds)
+- Selectable search source per query (auto / documents-only / web-only)
+- Concurrent document re-retrieval and web search within a round (Tavily)
 - Streamed Markdown answers with source citations
 - Config via environment variables
 
