@@ -25,7 +25,6 @@ Frontend -> Go backend
 - Multi-round document retrieval (warm-start + gap-driven re-retrieval)
 - Focus anchor to prevent topic drift
 - Plan-act-evaluate loop: an evaluate step finds gaps, a plan step decides the next document and/or web queries (max 3 rounds)
-- Selectable search source per query (auto / documents-only / web-only)
 - Concurrent document re-retrieval and web search within a round (Tavily)
 - Streamed Markdown answers with source citations
 - Config via environment variables
