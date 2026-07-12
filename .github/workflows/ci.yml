@@ -49,6 +49,9 @@ jobs:
       - name: Build
         run: go build ./...
 
+      - name: Test (race detector on)
+        run: go test -race ./...
+
   frontend:
     name: frontend (lint · typecheck · build)
     runs-on: ubuntu-latest
