@@ -15,8 +15,9 @@ func (s *Server) handleResearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Request string `json:"request"`
-		Source  string `json:"source"` // "auto"(default) | "docs" | "web"
+		Request   string   `json:"request"`
+		Source    string   `json:"source"`     // "auto"(default) | "docs" | "web"
+		SourceIDs []string `json:"source_ids"` // selected sources; empty = all
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid JSON body", http.StatusBadRequest)
@@ -33,9 +34,15 @@ func (s *Server) handleResearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// gather the pre-embedded chunks cached in the store at upload time
+	// Gather the pre-embedded chunks cached in the store at upload time. When the
+	// client selected specific sources, restrict retrieval to just those;
+	// otherwise research over every uploaded source.
+	docs := s.Store.All()
+	if len(body.SourceIDs) > 0 {
+		docs = s.Store.ByIDs(body.SourceIDs)
+	}
 	var chunks []documents.Chunk
-	for _, d := range s.Store.All() {
+	for _, d := range docs {
 		chunks = append(chunks, d.Chunks...)
 	}
 

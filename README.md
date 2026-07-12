@@ -1,215 +1,155 @@
-# Overview
+# encrypt-agent
 
-A research-agent that answers the user's question by combining their uploaded sources (embedding-based retrieval) with external web sources, reasoning and searching over multiple rounds to stream back a cited Markdown answer.
+**Exploring what AI agents can do when knowledge, memory, and inference are encrypted.**
 
-## Architecture
+
+
+## The idea
+
+Today's agents assume plaintext everywhere: documents sit unencrypted in vector
+stores, agent memory is readable by whoever runs the host, and every prompt is
+visible to the inference provider. That assumption breaks the moment agents
+touch anything confidential.
+
+`encrypt-agent` explores the alternative, one step at a time. The guiding metric
+across the whole roadmap is simple:
+
+> **At every phase, shrink the set of parties who can ever see plaintext.**
+
+Starting point: a central knowledge base where **all knowledge is encrypted at
+rest**, and **key permissions decide who reads which subset**. Humans and agents
+hold different keys — a master key reads everything; a scoped key reads only
+what it is authorized for; an agent gets a short-lived, revocable key that opens
+exactly the slice it needs. End state: agents whose retrieval, memory, and even
+LLM inference happen inside an encrypted envelope.
+
+See **[ROADMAP.md](ROADMAP.md)** for the full plan and the honest technical
+tensions (RAG vs. encryption, embedding leakage, why FHE isn't ready for LLMs).
+
+## Structure
+
+This is a monorepo. Each component lives in its own top-level directory with its
+own README, so it can be run and reasoned about independently.
 
 ```
-Frontend -> Go backend
-             |- upload -> extract -> chunk -> embedding -> store (short-term memory)
-             |- query (+ source mode: auto | docs | web) -> agent orchestration:
-                          |1. derive focus  <- anchor, threads through 2-4
-                          |2. warm-start retrieval from stored document embeddings
-                          |3. plan-act-evaluate loop (max 3 rounds):
-                          |     ┌─> evaluate : do docs + web notes answer the focus? -> gaps
-                          |     │   plan     : turn gaps into doc and/or web queries (per mode)
-                          |     └── act      : re-retrieve docs + web search, concurrently
-                          |4. synthesize and stream cited answer
+encrypt-agent/
+├── research-agent/    ← PoC #1 — the plaintext baseline (live)
+├── knowledge-vault/   ← next: encrypted knowledge base + key hierarchy (planned)
+└── ROADMAP.md         ← where this is going
 ```
 
+## Components
 
-## Features
+| Component | Status | What it does |
+|-----------|--------|--------------|
+| [**research-agent**](research-agent/) | ✅ PoC | Answers a question by combining uploaded sources (embedding-based retrieval) with live web search, reasoning over multiple plan–act–evaluate rounds to stream back a cited Markdown answer. The plaintext baseline every later phase hardens. |
+| **knowledge-vault** | 🚧 planned | Encrypted-at-rest knowledge store with envelope encryption (KEK→DEK) and key-scoped access: one ciphertext store, different keys see different subsets. |
 
-- Upload text files → chunked & embedded into a short-term memory store
-- Retrieval-augmented answering (cosine similarity over document chunks)
-- Multi-round document retrieval (warm-start + gap-driven re-retrieval)
-- Focus anchor to prevent topic drift
-- Plan-act-evaluate loop: an evaluate step finds gaps, a plan step decides the next document and/or web queries (max 3 rounds)
-- Concurrent document re-retrieval and web search within a round (Tavily)
-- Streamed Markdown answers with source citations
-- Config via environment variables
+## Getting started
 
-
-
-
-
-
-## Setup
-
-The frontend lives in the `frontend/` folder. Install dependencies:
+The ecosystem currently ships its first PoC:
 
 ```sh
-cd frontend
-npm install
+cd research-agent
+# follow research-agent/README.md (Docker Compose or local dev)
 ```
 
-Run the frontend locally:
+## research-agent HTTP API
+
+The research-agent backend exposes a small API under `/api`. **Sources** are the
+uploaded documents the agent can research over; the frontend's file manager
+drives their full lifecycle (list, upload, view, edit, delete) and picks which
+sources take part in a research run.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/sources` | List all uploaded sources (metadata only). |
+| `POST` | `/api/sources` | Upload one or more files (multipart field `files`). Each file is extracted, chunked, embedded, and **appended** to the store. |
+| `GET` | `/api/sources/{id}` | Fetch one source including its text content (for the view/edit pane). |
+| `PUT` | `/api/sources/{id}` | Save edited content; the document is re-chunked and re-embedded. |
+| `DELETE` | `/api/sources/{id}` | Remove a source. |
+| `POST` | `/api/research` | Run the agent over the selected sources; streams the Markdown answer. |
+
+**Source object** (returned by the `/api/sources` endpoints):
+
+```json
+{
+  "id": "b3f9c2a1",
+  "name": "General_Equipment_URS.txt",
+  "size": 18324,
+  "type": "text/plain",
+  "uploadedAt": "2026-07-12T09:30:00Z"
+}
+```
+
+- `GET /api/sources` → `{ "sources": [Source, …] }`
+- `POST /api/sources` → `{ "uploaded": [Source, …] }`
+- `GET /api/sources/{id}` → `Source` plus a `"content"` field
+- `PUT /api/sources/{id}` with body `{ "content": "…" }` → the updated `Source`
+- `DELETE /api/sources/{id}` → `204 No Content`
+- `POST /api/research` with body:
+
+  ```json
+  {
+    "request": "What are the safety requirements?",
+    "source": "auto",
+    "source_ids": ["b3f9c2a1"]
+  }
+  ```
+
+  `source` is `auto` (default) | `docs` | `web`. `source_ids` limits document
+  retrieval to the selected sources; omitted or empty means *all* uploaded
+  sources. The response streams `text/plain` Markdown chunks.
+
+Selection is deliberately client-side state: which sources join a run is a
+property of the *request*, not of the server, so the backend stays stateless
+and needs no session tracking.
+
+### Frontend file manager
+
+The `<FileManager>` component (`frontend/src/FileManager.tsx`) is the single
+place that talks to the source endpoints:
+
+- **View** — on mount it calls `GET /api/sources` and renders the list; each
+  row's *View / Edit* button lazy-loads the content via `GET /api/sources/{id}`.
+- **Add / change** — the *Upload* form posts to `POST /api/sources`; the editor
+  pane's *Save* button sends `PUT /api/sources/{id}`; *Delete* sends
+  `DELETE /api/sources/{id}`. Each mutation re-fetches the list.
+- **Select** — a checkbox per row toggles membership in a lifted `Set<string>`
+  of selected IDs; `App.tsx` passes `Array.from(selectedIds)` as `source_ids`
+  when it calls `POST /api/research`. No selection means "research all sources".
+
+### Running with Docker
+
+Nothing in the Docker setup has to change for the file manager — the new routes
+all live under the existing `/api` prefix that nginx already reverse-proxies,
+and the container images are unchanged.
 
 ```sh
-npm run dev
+# from research-agent/ (the directory holding docker-compose.yml)
+cp .env.example .env          # set LLM_API_KEY, SEARCH_API_KEY, etc.
+docker compose up --build     # frontend on http://localhost:8080
 ```
 
-Vite will print the local URL, usually `http://localhost:5173/`.
+How the pieces fit:
 
-## Backend API
+- **backend** (`backend/Dockerfile`) builds the Go binary and serves the API on
+  `:8787`, exposed only inside the compose network. Uploaded sources live in the
+  in-memory store, so they reset when the container restarts — acceptable for
+  the PoC. To persist them, back `store.Memory` with a volume-mounted directory
+  or a database and add that volume in `docker-compose.yml`.
+- **frontend** (`frontend/Dockerfile`) builds the Vite app with an empty
+  `VITE_API_BASE_URL`, so the browser uses relative `/api/...` paths. nginx
+  (`frontend/nginx.conf`) serves the static SPA and reverse-proxies `/api/` to
+  `backend:8787` — one origin, so no CORS is needed and the streaming response
+  passes through untouched (`proxy_buffering off`).
 
-By default, the frontend calls:
+Because all file-manager traffic is same-origin JSON/multipart under `/api/`,
+the only Docker-relevant caveat is upload size: nginx defaults to a 1 MB body
+limit. If you upload files larger than that, add `client_max_body_size 32m;`
+inside the `location /api/` block in `frontend/nginx.conf` to match the
+backend's 32 MB `ParseMultipartForm` limit.
 
-```txt
-http://localhost:8787
-```
+## License
 
-Set a different backend URL with:
-
-```sh
-VITE_API_BASE_URL=http://localhost:8787 npm run dev
-```
-
-Expected endpoints:
-
-- `POST /api/research` — accepts JSON `{ "request": "..." }` and returns a streamed markdown response.
-- `POST /api/sources` — accepts multipart form uploads under the repeated field name `files`.
-
-
-## Backend Setup
-
-The backend is a Go service that reads all LLM config from environment
-variables (`LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `SEARCH_API_KEY`, `EMBED_MODEL` ).
-Open a **second terminal** for it, separate from the frontend.
-
-### Option A — use a `.env` file (recommended)
-
-From the project root, copy the example file and fill in your real keys:
-
-```sh
-cp .env.example .env
-```
-edit .env and set your keys
-
-Then load it into the environment and start the server:
-
-```sh
-set -a; source .env; set +a
-cd backend && go run .
-```
-### Option B — export variables manually
-
-If you prefer not to use a file, export the variables in the terminal
-before starting the server:
-
-```sh
-cd backend
-export LLM_API_KEY="your api key"
-export LLM_BASE_URL="https://api.openai.com/v1"
-export LLM_MODEL="model name"
-export SEARCH_API_KEY="your search api key, tavily recommended"
-export EMBED_MODEL="model name"
-go run .
-
-```
-Either way, the backend listens on http://localhost:8787.
-
-## Run with Docker
-
-The whole app (frontend + backend) is containerized and orchestrated with
-Docker Compose. This is the simplest way to run everything with one command.
-
-1. From the project root, create your `.env` and fill in your keys:
-
-   ```sh
-   cp .env.example .env
-   # edit .env and set LLM_API_KEY, SEARCH_API_KEY, etc.
-   ```
-
-2. Build and start both services:
-
-   ```sh
-   docker compose up --build
-   ```
-
-3. Open **http://localhost:8080** in the browser.
-
-How it works:
-
-- **backend** — multi-stage Go build; reads config from `./.env` at runtime;
-  not exposed to the host, only reachable inside the Compose network.
-- **frontend** — built with Vite and served by nginx, which also reverse-proxies
-  `/api/*` to the backend. The browser talks to a single origin, so no CORS is
-  needed and streaming responses are forwarded unbuffered.
-
-
-# System Design Rationale
-
-## Background Understanding
-The task requires designing backend functionality for the provided frontend. The frontend includes a document upload module, a user query module, and a streaming response module.
-
-The goal of this project is to build a research agent that allows users to conduct research on relevant topics through LLM-based reasoning and receive structured research results. In addition, the system should support research based on the user’s own information sources.
-
-Inspired by mainstream research agent workflows, I decided to add a web search module to the backend. This enables the system to support three main research scenarios:
-
-1. Query-based research, such as predicting the winner of the current World Cup. This scenario relies on the web search functionality.
-2. Query + own information source research, such as breaking down requirements and assigning tasks based on a requirements document.
-3. Query + own information source + web search research, such as using a requirements document to identify similar existing solutions and research how such requirements are currently addressed.
-
-
-## Design Log
-
-### Design Round 1
-
-1. **Frontend–backend communication:** the test provides two APIs, one for uploading documents and one for the user query. Designed the backend endpoints to receive this information.
-2. **File upload:** first implemented the `extract` and `memory` functionality to store the original document text.
-3. **Agent:** combined the user query and the original document text into a single context.
-4. Passed the context (query + document text) to the LLM to produce the answer.
-
-**Problem:** document context plus the query alone was sometimes not enough to answer the question — especially when external web information was needed. This motivated adding a web search capability.
-
-### Design Round 2
-
-1. Added a `tools` file in the `agent` package implementing the web search logic.
-2. Passed the context (query + document text) to the LLM to run multi-round web search and answering.
-
-**Problem:** during the multi-round process, topic drift appeared. I suspected it was because the LLM decides the next round's query from the retrieved results, so I decided to add a **focus** feature to keep every round anchored to the user's query and avoid drift. At the same time, re-reading the test requirements I noticed that document **embedding** needed to be implemented. In Round 1 I had assumed that modern models generally have long context windows, so I chose to inject the raw text directly into the context. I therefore decided to add the document embedding logic in Round 3.
-
-### Design Round 3
-
-1. Added an `embed` file in the `agent` package implementing document chunking, embedding, and cosine-similarity search — enabling similarity-based retrieval of documents against the user query.
-2. Set the chunking logic to a (1600, 200) overlapping scheme. More advanced chunking techniques are left as future work.
-3. For the multi-round web search, added **goroutines within a single round to run searches concurrently.**
-4. Applied multi round retrieval for document, modified the agent loop into plan-act-evaluate logic. Now the agent will perceive search result from web search and document retrieval, evaluate the found key points and address gaps for the next round. 
-
-
-## Future Work
-
-### System
-
-1. Currently only short-term memory is supported: vectorized documents are held in memory awaiting research. In the future, add long-term memory — a personal, long-term knowledge base for the user built on a vector database plus document-management features — to support more complex research tasks.
-2. Add more tools. Currently there is only a web search tool; in the future, add MCP tools, a deep-research tool, a memory-export tool, and others.
-3. Support more document types. Currently only `.txt` is supported; in the future, support PDF, HTML, PPTX, Word, etc., along with multimodal document understanding — e.g. understanding diagrams inside a PDF requirements document.
-4. Add multi-turn conversation and conversation saving, and build long-term conversational memory on top of that.
-
-### Frontend
-
-1. Render the answer: turn the streamed Markdown answer into a more readable, well-formatted display.
-2. Support uploading multiple documents and multiple document formats, with the ability to add or remove documents within a session.
-3. Support queries that combine images and text.
-4. Build a conversational interaction interface.
-5. Develop a document-management page — a graphical interface for managing a personal or organizational internal knowledge base.
-
-### Backend
-
-1. Improve the architecture. The current `agent` file is a fixed, pre-orchestrated agent workflow; in the future, move to a modular design that gives users more freedom to interact with the agent and lets them toggle individual capabilities on and off.
-2. Improve the chunking logic with a more efficient and more accurate chunking method.
-3. Improve retrieval quality. The current approach is single-stage dense retrieval (cosine similarity over embeddings). Future options: hybrid retrieval that combines keyword search (e.g. BM25) with dense vectors, a second-stage cross-encoder reranker to reorder the top candidates, and MMR-style selection to reduce redundancy among retrieved chunks.
-4. Optimize the code structure to reduce cost and improve runtime performance, especially in production scenarios.
-
-
-# Test
-
-Sample material for trying the agent lives in [`data/`](data/): a `.txt` requirements document ([`General_Equipment_URS.txt`](data/General_Equipment_URS.txt)) and a set of ready-made test cases ([`test-cases`](data/test-cases)).
-
-To test: download the `.txt` file (or bring your own — only `.txt` uploads are supported), then in the frontend upload the file, enter a query, and click **Research**. Pick a query from `test-cases`, or write your own. Watch the streamed research focus, search rounds, and final answer.
-
-
-
-
-
+[MIT](LICENSE)
