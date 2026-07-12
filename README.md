@@ -1,4 +1,4 @@
-# encrypt-agent
+# encrypt-research-agent
 
 **Exploring what AI agents can do when knowledge, memory, and inference are encrypted.**
 
